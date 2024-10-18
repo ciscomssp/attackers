@@ -2,7 +2,7 @@ function FodhelperBypass(){
  
 Param (    
  
- [String]$program = "c:\Users\gradya\Downloads\splunkd.exe"
+ [String]$program = "C:\Windows\System32\splunkd.exe"
  
       )
  
