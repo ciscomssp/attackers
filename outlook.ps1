@@ -24,3 +24,4 @@ $mail.Send()
 
 # Optionally, clean up the downloaded file after sending the email
 # Remove-Item $localAttachmentPath -Force
+
