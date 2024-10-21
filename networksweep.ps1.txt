@@ -1,0 +1,105 @@
+param (
+    [string]$IP,
+    [string]$outputFile = "",  # Making the output file optional
+    [string]$Ports = "21,22,23,80,443,3389"  # Adding an optional ports parameter
+)
+
+# Function to display usage instructions
+function Show-Usage {
+    @"
+Usage:
+    .\NetworkSweep.ps1 -IP  [-outputFile ] [-Ports ]
+
+Examples:
+    .\NetworkSweep.ps1 -IP "192.168.1.0/24" -outputFile "ScanResults.txt" -Ports "22,80,443"
+    .\NetworkSweep.ps1 -IP "192.168.1.100" -outputFile "SingleHostScan.txt" -Ports "21-23,80"
+
+Description:
+    This script performs a network sweep to identify hosts and open ports within a given IP
+    range or for a single IP address. It mimics some of the functionality of the nmap -A option by
+    scanning specified ports and providing a report of the open ports.
+
+Parameters:
+    -IP          Specifies the IP or IP range to scan.
+    -outputFile  Specifies the file to which the scan results will be saved. (optional)
+    -Ports       Specifies the ports or range of ports to scan. (optional, default is "21,22,23,80,443,3389")
+"@
+}
+
+# Check if help is requested or required parameters are missing
+if ($PSBoundParameters.ContainsKey('Help') -or -not $IP) {
+    Show-Usage
+    exit
+}
+
+# Parse the Ports parameter to create a list of ports to scan
+$ports = @()
+if ($Ports -match ",") {
+    $ports = $Ports -split ","
+} elseif ($Ports -match "-") {
+    $startPort, $endPort = $Ports -split "-", 2
+    $ports = $startPort..$endPort
+} else {
+    $ports = $Ports
+}
+
+# Function to expand IP range if an IP is provided
+function Expand-IPRange($IP) {
+    $ipRange = @()
+    if ($IP -match '/') {
+        $ip, $prefix = $IP -split '/', 2
+        $ipAddress = [System.Net.IPAddress]::Parse($ip).GetAddressBytes()
+        [Array]::Reverse($ipAddress)
+        $ipDecimal = [System.BitConverter]::ToUInt32($ipAddress, 0)
+        $maskDecimal = [uint32]::MaxValue - ([math]::Pow(2, (32 - $prefix)) - 1)
+        $networkAddress = $ipDecimal -band $maskDecimal
+        $broadcastAddress = $networkAddress -bor ([math]::Pow(2, (32 - $prefix)) - 1)
+        for ($i = $networkAddress + 1; $i -lt $broadcastAddress; $i++) {
+            $ipRange += [System.Net.IPAddress]::new($i).IPAddressToString
+        }
+    } else {
+        $ipRange += $IP
+    }
+    return $ipRange
+}
+
+# Function to test ports on a given IP address
+function Test-Port($ip, $port) {
+    $tcpclient = New-Object system.net.sockets.tcpclient
+    try {
+        $connect = $tcpclient.BeginConnect($ip, $port, $null, $null)
+        $wait = $connect.AsyncWaitHandle.WaitOne(500, $false)
+        if ($wait -and $tcpclient.Connected) {
+            $tcpclient.Close()
+            return "$ip has $port open"
+        } else {
+            $tcpclient.Close()
+            return "$ip has $port closed"
+        }
+    } catch {
+        $tcpclient.Close()
+        return "$ip has $port closed"
+    }
+}
+
+# Expand the IP range based on the IP provided
+$ipRange = Expand-IPRange $IP
+
+# Scan each IP in the range
+$results = foreach ($ip in $ipRange) {
+    if (Test-Connection -ComputerName $ip -Count 1 -Quiet) {
+        "Scanning $ip for open ports..."
+        foreach ($port in $ports) {
+            Test-Port -ip $ip -port $port
+        }
+    } else {
+        "$ip is not responsive"
+    }
+}
+
+# Output results to the specified file or display on console
+if ($outputFile) {
+    $results | Out-File -FilePath $outputFile
+} else {
+    $results | Out-Host
+}
